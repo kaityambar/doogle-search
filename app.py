@@ -51,7 +51,7 @@ def api_search():
         results = []
 
         if query.strip():
-            raw_results = do_search(index, term_freqs, doc_freqs, zones, query, zone_filter)
+            raw_results = do_search(index, term_freqs, doc_freqs, zones, query)
             total_results = len(raw_results)
             start = (page - 1) * results_per_page
             end = start + results_per_page
