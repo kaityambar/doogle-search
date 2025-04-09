@@ -43,35 +43,40 @@ def extract_snippet(text, query, length=200):
 # API route for Wix
 @app.route('/api/search')
 def api_search():
-    query = request.args.get("q", "")
-    zone_filter = request.args.get("zone", "all")
-    page = int(request.args.get("page", 1))
-    results_per_page = 10
-    results = []
+    try:
+        query = request.args.get("q", "")
+        zone_filter = request.args.get("zone", "all")
+        page = int(request.args.get("page", 1))
+        results_per_page = 10
+        results = []
 
-    if query.strip():
-        raw_results = do_search(index, term_freqs, doc_freqs, zones, query, zone_filter)
-        total_results = len(raw_results)
-        start = (page - 1) * results_per_page
-        end = start + results_per_page
+        if query.strip():
+            raw_results = do_search(index, term_freqs, doc_freqs, zones, query, zone_filter)
+            total_results = len(raw_results)
+            start = (page - 1) * results_per_page
+            end = start + results_per_page
 
-        for url, score in raw_results[start:end]:
-            body = pages.get(url, {}).get("body", "")
-            snippet = extract_snippet(body, query)
-            results.append({
-                "url": url,
-                "score": round(float(score), 2),
-                "snippet": snippet
-            })
-    else:
-        total_results = 0
+            for url, score in raw_results[start:end]:
+                body = pages.get(url, {}).get("body", "")
+                snippet = extract_snippet(body, query)
+                results.append({
+                    "url": url,
+                    "score": round(float(score), 2),
+                    "snippet": snippet
+                })
+        else:
+            total_results = 0
 
-    return jsonify({
-        "query": query,
-        "page": page,
-        "results": results,
-        "total_results": total_results
-    })
+        return jsonify({
+            "query": query,
+            "page": page,
+            "results": results,
+            "total_results": total_results
+        })
+
+    except Exception as e:
+        print("❌ Error in /api/search:", e)
+        return jsonify({"error": "Internal Server Error", "details": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
