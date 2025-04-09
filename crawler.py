@@ -2,9 +2,9 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
-def crawl(url, max_pages=5):
+def crawl(start_urls, max_pages=5):
     visited = set()
-    to_visit = [url]
+    to_visit = list(start_urls)
     pages = {}
 
     while to_visit and len(visited) < max_pages:
