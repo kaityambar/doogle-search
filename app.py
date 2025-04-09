@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from storage import load_index, save_index
+from storage import load_index, save_index, load_pages, save_pages
 from searcher import do_search
 from indexer import build_index
 from crawler import crawl
@@ -8,6 +8,7 @@ import os
 app = Flask(__name__)
 
 INDEX_FILE = "search_index.pkl"
+PAGES_FILE = "pages.pkl"
 CONTENT_FILE = "seed_urls.txt"
 
 # Load start URLs
@@ -16,17 +17,17 @@ def load_start_urls(file_path=CONTENT_FILE):
         return [line.strip() for line in f if line.strip()]
 
 # Load or build index
-if os.path.exists(INDEX_FILE):
-    print("🔁 Loading index from disk...")
+if os.path.exists(INDEX_FILE) and os.path.exists(PAGES_FILE):
+    print("🔁 Loading index and pages from disk...")
     index, term_freqs, doc_freqs, zones = load_index(INDEX_FILE)
-    start_urls = load_start_urls()
-    pages = crawl(start_urls)
+    pages = load_pages(PAGES_FILE)
 else:
     print("🌐 Crawling and building index...")
     start_urls = load_start_urls()
     pages = crawl(start_urls)
     index, term_freqs, doc_freqs, zones = build_index(pages)
     save_index(INDEX_FILE, (index, term_freqs, doc_freqs, zones))
+    save_pages(PAGES_FILE, pages)
 
 # Snippet helper
 def extract_snippet(text, query, length=200):
@@ -62,8 +63,15 @@ def api_search():
                 "score": round(float(score), 2),
                 "snippet": snippet
             })
+    else:
+        total_results = 0
 
-    return jsonify(results)
+    return jsonify({
+        "query": query,
+        "page": page,
+        "results": results,
+        "total_results": total_results
+    })
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
