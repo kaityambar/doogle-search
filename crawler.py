@@ -10,6 +10,11 @@ def crawl(start_urls, max_pages=5):
     while to_visit and len(visited) < max_pages:
         current_url = to_visit.pop()
         try:
+            if not current_url.startswith("http"):
+                print(f"⚠️ Skipping invalid URL: {current_url}")
+                continue
+
+            print(f"🌐 Crawling: {current_url}")
             response = requests.get(current_url, timeout=5)
             soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -33,6 +38,6 @@ def crawl(start_urls, max_pages=5):
                     to_visit.append(full_url)
 
         except Exception as e:
-            print(f"Error crawling {current_url}: {e}")
+            print(f"Error occurred while crawling {current_url}: {e}")
 
     return pages
